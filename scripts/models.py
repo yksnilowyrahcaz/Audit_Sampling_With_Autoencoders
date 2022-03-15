@@ -1,9 +1,9 @@
 import sys
 import time
 import torch
-torch.manual_seed(1729)
 import torch.nn as nn
 import datapane as dp
+torch.manual_seed(1729)
 import plotly.express as px
 import torch.nn.functional as F
 import plotly.graph_objects as go
@@ -166,7 +166,7 @@ def plot_projection(self, data, num_batches=10):
                      gridwidth=1)
 
     buttons = []
-    data.feature_names[13] = 'outlier_score'                               
+    data.feature_names[13] = 'reconstruction_loss'                               
     for index, feature in data.feature_names.items():
         if index not in [8,9,10]: # exclude day, month, year (isotropic)
             args = dict(size=10,
