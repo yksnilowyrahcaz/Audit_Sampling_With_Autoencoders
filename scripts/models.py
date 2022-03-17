@@ -1,13 +1,13 @@
 import sys
 import time
 import torch
+torch.manual_seed(0)
 import torch.nn as nn
 import datapane as dp
-torch.manual_seed(1729)
 import plotly.express as px
 import torch.nn.functional as F
 import plotly.graph_objects as go
-from preprocessing import Preprocessor
+from .preprocessing import Preprocessor
 
 # use GPU if available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -62,7 +62,7 @@ def plot_loss(self):
                       title_x=0.5)
     return fig
 
-def plot_projection(self, data, num_batches=10):
+def plot_projection(self, data, which='train_set', num_batches=10):
     '''
     Provides a way to visualize the encoded transaction data
     color coded by the the features, excluding day, month and year,
@@ -70,15 +70,19 @@ def plot_projection(self, data, num_batches=10):
     
     Args: 
         data: 
-            torch.utils.data.DataLoader object 
-            that contains the dataset of interest
+            scripts.processing.Preprocessor object 
+            that contains the dataset of interest,
+            for example train_set or test_set
 
-        num_features:
-            number of features that comprise the dataset
+        which:
+            str, 'train_set' to plot the encoded training
+            data, else encode and plot the test_set data.
+            Default='train_set'
 
         num_batches:
             number of batches of 128 data points to
-                    project on two latent dimenstions z.1 and z.2
+                    project on two latent dimenstions 
+                    z.1 and z.2. Default=10
     
     Returns:
         fig:
@@ -87,7 +91,10 @@ def plot_projection(self, data, num_batches=10):
     self.scores = torch.empty((0, 1))
     self.projection = torch.empty((0, self.latent_dims))
     self.labels = torch.empty((0, data.preprocessed.shape[1]))
-    for i, (x, y) in enumerate(data.dataset):
+    for i, (x, y) in enumerate(data.train_set 
+                               if which == 'train_set' 
+                               else data.test_set):
+        
         z = self.encode(x.to(device))
         x_hat = self.decode(z).detach()
         z = z.to('cpu').detach()
@@ -304,7 +311,7 @@ class AE(nn.Module):
         x_hat = torch.sigmoid(self.linear4(z))
         return x_hat
     
-    def fit(self, data, epochs=1):
+    def fit(self, dataset, epochs=1):
         '''
         Train the autoencoder network
         '''
@@ -312,7 +319,7 @@ class AE(nn.Module):
         opt = torch.optim.Adam(self.parameters())
         for epoch in range(epochs):
             start_time = time.time()
-            for x, y in data:
+            for x, y in dataset:
                 x = x.to(device) # use GPU if available
                 opt.zero_grad()
                 x_hat = self.decode(self.encode(x))
@@ -425,12 +432,12 @@ class VAE(nn.Module):
         x_hat = torch.sigmoid(self.linear5(z))
         return x_hat
     
-    def fit(self, data, epochs=1, gamma=1):
+    def fit(self, dataset, epochs=1, gamma=1):
         self.losses = []
         opt = torch.optim.Adam(self.parameters())
         for epoch in range(epochs):
             start_time = time.time()
-            for x, y in data:
+            for x, y in dataset:
                 x = x.to(device) # use GPU if available
                 opt.zero_grad()
                 x_hat = self.decode(self.encode(x))
@@ -452,11 +459,11 @@ def main():
         
         print(f'Loading dataset from: {philly_payments_clean}')
         data = torch.load(philly_payments_clean)
-        dims = data.X_.shape[1]
+        dims = data.X_train.shape[1]
         
         print('Training the autoencoder...')
         model = AE(dims,2,dims) if model_choice == 'ae' else VAE(dims,2,dims)
-        model.fit(data.dataset, epochs=int(epochs))
+        model.fit(data.train_set, epochs=int(epochs))
         
         print('Model training complete! Saving model...')
         torch.save(model, 'data/trained_model')

@@ -6,6 +6,8 @@ import calendar
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from sklearn.model_selection import train_test_split
+from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 class Preprocessor:
@@ -27,6 +29,7 @@ class Preprocessor:
         '''
         
         # remove redundant columns, fill NaN with 'None', add features
+        start_time = time.time()
         print('Cleaning data...')
         df.department_title = df.department_title.str.split().apply(
             lambda x: ' '.join(x[1:len(x)]))
@@ -72,7 +75,7 @@ class Preprocessor:
         self.numerical = df.select_dtypes(include=['int64', 'float64']).columns
         self.categorical = df.select_dtypes(include=['object', 'bool']).columns
         
-        # Get feature names for plotting
+        # get feature names for plotting
         self.feature_names = dict(zip(range(len(self.categorical) +\
                                             len(self.numerical)-1),
                                       self.categorical.tolist()[1:] +\
@@ -85,34 +88,53 @@ class Preprocessor:
             lambda x: self.le[x.name].fit_transform(x))
         self.Y = pd.concat([self.Y, df[self.numerical]], axis=1)
 
-        # Take a sample that will become our X matrix
+        # take a sample that will become our X matrix
         print('Sampling from the original data...')
-        self.df_sample = df.sample(n=128*373, random_state=1729).drop(
+        self.X_sample = df.sample(n=128*373, random_state=1729).drop(
             columns='document_no')
 
-        # Take another sample using the same random_sate
+        # take another sample using the same random_sate
         # thus, same indices as df_sample, to use to recover labels
         self.Y_sample = self.Y.sample(n=128*373, random_state=1729)
 
         # create dummy variables to one-hot-encode
         print('One-hot-encoding the data...')
-        self.X = pd.get_dummies(self.df_sample, drop_first=True)
+        self.X_sample = pd.get_dummies(self.X_sample, drop_first=True)
+        
+        # create training and test sets
+        self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
+            self.X_sample, self.Y_sample, test_size=128*73, random_state=1729)
 
         # min-max scale the transaction amount
-        self.X.transaction_amount = MinMaxScaler().fit_transform(
-            self.X.transaction_amount.to_numpy().reshape(-1,1))
-
+        self.X_train.transaction_amount = MinMaxScaler().fit_transform(
+            self.X_train.transaction_amount.to_numpy().reshape(-1,1))
+        
+        self.X_test.transaction_amount = MinMaxScaler().fit_transform(
+            self.X_test.transaction_amount.to_numpy().reshape(-1,1))
+        
         # create tensors
         print('Generating tensors...')
-        self.X_ = torch.FloatTensor(self.X.values)
-        self.Y_ = torch.FloatTensor(self.Y_sample.values)
+        self.X_train = torch.FloatTensor(self.X_train.values)
+        self.X_test = torch.FloatTensor(self.X_test.values)
+        self.Y_train = torch.FloatTensor(self.Y_train.values)
+        self.Y_test = torch.FloatTensor(self.Y_test.values)
         
         # combine X_ and Y_ into a single dataset
         print('Combining tensors into one dataset...')
-        self.dataset = torch.utils.data.TensorDataset(self.X_, self.Y_)
-        self.dataset = torch.utils.data.DataLoader(self.dataset, 
-                                                   batch_size=128, 
-                                                   shuffle=True)
+        self.train_set = TensorDataset(self.X_train, self.Y_train)
+        self.train_set = DataLoader(self.train_set, 
+                                    batch_size=128, 
+                                    shuffle=True)
+        
+        self.test_set = TensorDataset(self.X_test, self.Y_test)
+        self.test_set = DataLoader(self.test_set, 
+                                   batch_size=128, 
+                                   shuffle=True)
+           
+        print('Preprocessing complete!')
+        print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
+        
+        return self
 
     def recover_labels(self, Y):
         '''
@@ -142,8 +164,8 @@ def main():
         print(f'Loading data from: {philly_payments_filepath}')
         df = pd.read_csv(philly_payments_filepath)
         pre = Preprocessor()
-        pre.process(df)
-        torch.save(pre, 'data/philly_payments_clean')
+        data = pre.process(df)
+        torch.save(data, 'data/philly_payments_clean')
         print('Preprocessing complete!')
         print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
     
