@@ -25,33 +25,59 @@ def plot_loss(self):
         fig:
             plotly.express graph object
     '''
-    fig = px.line(y=[x.detach() for x in self.losses], 
-                  log_x=True, log_y=True, 
-                  labels={'x':'Batch Number', 
-                          'y':'Squared Error'})
+    fig = px.scatter()
+    
+    fig.add_trace(
+        go.Scatter(
+            y=[x.detach() for x in self.train_loss],
+            line=dict(color='blue'),
+            marker=dict(size=5,
+                        color='lightgreen',
+                        line=dict(width=0.7,
+                                  color='DarkSlateGrey')
+                       ),
+            showlegend=True,
+            name='Training Loss'
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            y=[x.detach() for x in self.test_loss],
+            line=dict(color='crimson'),
+            marker=dict(size=5,
+                        color='yellow',
+                        line=dict(width=0.7,
+                                  color='purple')
+                       ),
+            showlegend=True,
+            name='Testing Loss'
+        )
+    )
 
     fig.update_traces(mode='markers+lines')
 
-    fig.update_traces(marker_line_width=1, 
-                      marker_line_color='black',
-                      marker=dict(color='lightgreen'),
-                      hovertemplate='<br>'.join([
-                          'Batch Number: %{x}',
-                          'Squared Error: %{y:,.0f}']))
+    fig.update_traces(hovertemplate='<br>'.join([
+        'Batch Number: %{x}',
+        'RMSE: %{y:,.4f}'
+    ]))
 
-    fig.update_xaxes(gridcolor='lightgray',
+    fig.update_xaxes(title_text='Batch Number',
+                     gridcolor='lightgray',
                      showgrid=True, 
-                     gridwidth=1)
+                     gridwidth=1, 
+                     type='log')
 
-    fig.update_yaxes(gridcolor='lightgray',
+    fig.update_yaxes(title_text='RMSE',
+                     gridcolor='lightgray',
                      showgrid=True, 
-                     gridwidth=1)
+                     gridwidth=1,
+                     type='log')
 
     fig.update_layout(title_font_size=20,
                       title_text='Training Reconstruction Loss',
                       paper_bgcolor='rgba(0,0,0,0)',
                       plot_bgcolor='rgba(0,0,0,0)',
-                      showlegend=False,
                       hoverlabel=dict(
                           bgcolor='ivory',
                           font_size=16,
@@ -81,8 +107,8 @@ def plot_projection(self, data, which='train_set', num_batches=10):
 
         num_batches:
             number of batches of 128 data points to
-                    project on two latent dimenstions 
-                    z.1 and z.2. Default=10
+            project on two latent dimenstions 
+            z.1 and z.2. Default=10
     
     Returns:
         fig:
@@ -311,23 +337,31 @@ class AE(nn.Module):
         x_hat = torch.sigmoid(self.linear4(z))
         return x_hat
     
-    def fit(self, dataset, epochs=1):
+    def fit(self, data, epochs=1):
         '''
         Train the autoencoder network
         '''
-        self.losses = []
+        self.test_loss = []
+        self.train_loss = []
         opt = torch.optim.Adam(self.parameters())
         for epoch in range(epochs):
             start_time = time.time()
-            for x, y in dataset:
-                x = x.to(device) # use GPU if available
+            for (x_train, y_train), (x_test, y_test) in zip(data.train_set, data.test_set):
+                self.train()
+                x_train = x_train.to(device) # use GPU if available
                 opt.zero_grad()
-                x_hat = self.decode(self.encode(x))
-                loss = ((x - x_hat)**2).sum()
-                self.losses.append(loss)
+                x_train_pred = self.decode(self.encode(x_train))
+                loss = torch.sqrt(F.mse_loss(x_train_pred, x_train))
+                self.train_loss.append(loss)
                 loss.backward()
                 opt.step()
-            print(f'epoch [{epoch+1}/{epochs}] | ' +
+                with torch.no_grad():
+                    self.eval()
+                    x_test_pred = self.decode(self.encode(x_test))
+                    self.test_loss.append(
+                        torch.sqrt(F.mse_loss(x_test_pred, x_test))
+                    ) 
+            print(f'epoch: [{epoch+1}/{epochs}] | ' +
                   f'loss: {round(loss.detach().item(), 4)} | '+
                   f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
             
@@ -433,19 +467,27 @@ class VAE(nn.Module):
         return x_hat
     
     def fit(self, dataset, epochs=1, gamma=1):
-        self.losses = []
+        self.test_loss = []
+        self.train_loss = []
         opt = torch.optim.Adam(self.parameters())
         for epoch in range(epochs):
             start_time = time.time()
-            for x, y in dataset:
-                x = x.to(device) # use GPU if available
+            for (x_train, y_train), (x_test, y_test) in zip(data.train_set, data.test_set):
+                self.train()
+                x_train = x_train.to(device) # use GPU if available
                 opt.zero_grad()
-                x_hat = self.decode(self.encode(x))
-                loss = ((x - x_hat)**2).sum() + gamma*self.kl
-                self.losses.append(loss)
+                x_train_pred = self.decode(self.encode(x_train))
+                loss = torch.sqrt(F.mse_loss(x_train_pred, x_train)) + gamma*self.kl
+                self.train_loss.append(loss)
                 loss.backward()
                 opt.step()
-            print(f'epoch [{epoch+1}/{epochs}] | ' +
+                with torch.no_grad():
+                    self.eval()
+                    x_test_pred = self.decode(self.encode(x_test))
+                    self.test_loss.append(
+                        torch.sqrt(F.mse_loss(x_test_pred, x_test)) + gamma*self.kl
+                    ) 
+            print(f'epoch: [{epoch+1}/{epochs}] | ' +
                   f'loss: {round(loss.detach().item(), 4)} | '+
                   f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
                 
