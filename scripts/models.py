@@ -1,6 +1,7 @@
 import sys
 import time
 import torch
+import itertools
 torch.manual_seed(0)
 import torch.nn as nn
 import datapane as dp
@@ -29,33 +30,23 @@ def plot_loss(self):
     
     fig.add_trace(
         go.Scatter(
-            y=[x.detach() for x in self.train_loss],
-            line=dict(color='blue'),
-            marker=dict(size=5,
-                        color='lightgreen',
-                        line=dict(width=0.7,
-                                  color='DarkSlateGrey')
-                       ),
+            y=self.train_loss,
+            line=dict(color='forestgreen'),
             showlegend=True,
             name='Training Loss'
         )
     )
-
+        
     fig.add_trace(
         go.Scatter(
-            y=[x.detach() for x in self.test_loss],
-            line=dict(color='crimson'),
-            marker=dict(size=5,
-                        color='yellow',
-                        line=dict(width=0.7,
-                                  color='purple')
-                       ),
+            y=self.test_loss,
+            line=dict(color='purple'),
             showlegend=True,
             name='Testing Loss'
         )
     )
 
-    fig.update_traces(mode='markers+lines')
+    fig.update_traces(mode='lines')
 
     fig.update_traces(hovertemplate='<br>'.join([
         'Batch Number: %{x}',
@@ -103,12 +94,12 @@ def plot_projection(self, data, which='train_set', num_batches=10):
         which:
             str, 'train_set' to plot the encoded training
             data, else encode and plot the test_set data.
-            Default='train_set'
+            Default: 'train_set'
 
         num_batches:
             number of batches of 128 data points to
             project on two latent dimenstions 
-            z.1 and z.2. Default=10
+            z.1 and z.2. Default: 10
     
     Returns:
         fig:
@@ -120,15 +111,14 @@ def plot_projection(self, data, which='train_set', num_batches=10):
     for i, (x, y) in enumerate(data.train_set 
                                if which == 'train_set' 
                                else data.test_set):
-        
         z = self.encode(x.to(device))
-        x_hat = self.decode(z).detach()
+        x_pred = self.decode(z).detach()
         z = z.to('cpu').detach()
-        self.scores = torch.vstack(
-            (self.scores, ((x - x_hat)**2).sum(axis=1).reshape(-1,1)))                   
-        self.projection = torch.vstack((self.projection, z))
+        scores = ((x - x_pred)**2).mean(axis=1).sqrt()
         self.labels = torch.vstack((self.labels, y))
-        if i == num_batches:
+        self.projection = torch.vstack((self.projection, z))
+        self.scores = torch.vstack((self.scores, scores.reshape(-1,1)))                   
+        if i == num_batches - 1:
             self.labels = torch.hstack((self.labels, self.scores))
             break
 
@@ -334,8 +324,8 @@ class AE(nn.Module):
             self.bn2(self.linear3(z)) 
             if self.batch_norm 
             else self.linear3(z))
-        x_hat = torch.sigmoid(self.linear4(z))
-        return x_hat
+        x_pred = torch.sigmoid(self.linear4(z))
+        return x_pred
     
     def fit(self, data, epochs=1):
         '''
@@ -343,26 +333,28 @@ class AE(nn.Module):
         '''
         self.test_loss = []
         self.train_loss = []
+        test_set = itertools.cycle(data.test_set)
         opt = torch.optim.Adam(self.parameters())
         for epoch in range(epochs):
             start_time = time.time()
-            for (x_train, y_train), (x_test, y_test) in zip(data.train_set, data.test_set):
+            for x_train, y_train in data.train_set:
                 self.train()
                 x_train = x_train.to(device) # use GPU if available
                 opt.zero_grad()
                 x_train_pred = self.decode(self.encode(x_train))
-                loss = torch.sqrt(F.mse_loss(x_train_pred, x_train))
-                self.train_loss.append(loss)
+                loss = F.mse_loss(x_train_pred, x_train).sqrt()
+                self.train_loss.append(loss.item())
                 loss.backward()
                 opt.step()
                 with torch.no_grad():
                     self.eval()
+                    x_test = next(test_set)[0]
                     x_test_pred = self.decode(self.encode(x_test))
                     self.test_loss.append(
-                        torch.sqrt(F.mse_loss(x_test_pred, x_test))
+                        F.mse_loss(x_test_pred, x_test).sqrt().item()
                     ) 
             print(f'epoch: [{epoch+1}/{epochs}] | ' +
-                  f'loss: {round(loss.detach().item(), 4)} | '+
+                  f'loss: {round(loss.item(), 4)} | ' +
                   f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
             
     plot_projection = plot_projection
