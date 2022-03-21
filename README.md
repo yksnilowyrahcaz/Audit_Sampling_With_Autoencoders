@@ -31,11 +31,11 @@ This project is largely inspired by a paper published in 2020 by Marco Schreyer,
         
 6. To run the ETL pipeline that cleans data and pickles it, type the following in the command line:
         
-        python data/preprocessing.py data/city_payments_fy2017.csv
+        python preprocessing.py data/city_payments_fy2017.csv
 
 7. To train a traditional autoencoder and save the model locally, type the following in the command line:
 
-        python scripts/models.py data/philly_payments_clean ae 5
+        python models.py data/philly_payments_clean ae 5
        
 Note: This is provided as an example, you can also chooose "vae" and a number of epochs other than 5. 
 When training is complete an html file is generated providing a visualization of the embedded transaction data.
@@ -74,9 +74,9 @@ To demonstrate the use of autoencoders for financial transaction analysis, we wi
 | File | Description |
 | :--- | :--- |
 | data/city_payments_fy2017.csv | features: dept, trans amount, date, purchased item, etc.|
-| data/ASWA.ipynb | jupter notebook used to develop analysis |
-| models/preprocessing.py | module for ETL, prepares data for neural network |
-| models/models.py | module with autoencoder classes and methods for analysis |
+| ASWA.ipynb | jupter notebook used to develop analysis |
+| preprocessing.py | module for ETL, prepares data for neural network |
+| models.py | module with autoencoder classes and methods for analysis |
 
 ## Results <a name="results"></a>
 
