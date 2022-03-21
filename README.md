@@ -65,7 +65,7 @@ There are a variety of sampling methods used by auditors. Random sampling is bas
 
 **Autoencoders** offer an alternative method for addressing sampling risk. An autoencoder is a neural network that learns to encode data into lower dimensions and decode it back into higher dimensions. The resulting model provides a low-dimensional representation of the data, disentangling it in a way that reveals something about the fundamental structure. Auditors can model transactions in this way and select from low-dimensional clusters. They can also identify anomalous transactions based on how much they deviate from other transactions in this latent space.
 
-<img src="images/ae.png" >
+<img src="images/ae.png" width=600>
 
 ## About The Dataset <a name="data"></a>
 To demonstrate the use of autoencoders for financial transaction analysis, we will use the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in Schreyer et al (2020) and consists of nearly a quarter-million payments from about 60 city offices, departments, boards and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
