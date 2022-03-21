@@ -80,4 +80,4 @@ To demonstrate the use of autoencoders for financial transaction analysis, we wi
 
 ## Results <a name="results"></a>
 
-More about this project can be found at the Medium blog post.
+More about this project can be found at the Medium blog post (link coming soon).
