@@ -2,6 +2,7 @@ import sys
 import time
 import torch
 import itertools
+import pandas as pd
 torch.manual_seed(0)
 import torch.nn as nn
 import datapane as dp
@@ -14,13 +15,62 @@ from .preprocessing import Preprocessor
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
-# ...........................VISUALIZATION FUNCTIONS...............................#
+# ...............................SHARED FUNCTIONS..................................#
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#  
+
+def fit(self, data, epochs=1, gamma=1e-3):
+    '''
+    Iteratively train the autoencoder,
+    optimizing over parameter space by minimizing
+    mean squared error (MSE). Collect training
+    and validation losses for model evaluation.
+
+    Args: 
+        data: 
+            torch.utils.data.DataLoader object 
+            that contains the dataset of interest
+
+        epochs:
+            number of times to batch cycle through 
+            all of the data being learned from. 
+            Default: 1
+
+        gamma:
+            weight applied to the Kullback–Leibler divergence
+            term of the loss function. 
+            Default: 1e-3 (0.001)
+    '''
+    self.test_loss = []
+    self.train_loss = []
+    test_set = itertools.cycle(data.test_set)
+    opt = torch.optim.Adam(self.parameters())
+    for epoch in range(epochs):
+        start_time = time.time()
+        for x_train, y_train in data.train_set:
+            self.train()
+            x_train = x_train.to(device)
+            opt.zero_grad()
+            x_train_pred = self.decode(self.encode(x_train))
+            loss = ((x_train - x_train_pred)**2).sum() + gamma*self.kl
+            self.train_loss.append(loss.item())
+            loss.backward()
+            opt.step()
+            with torch.no_grad():
+                self.eval()
+                x_test = next(test_set)[0]
+                x_test_pred = self.decode(self.encode(x_test))
+                self.test_loss.append(
+                    (((x_test - x_test_pred)**2).sum() + gamma*self.kl).item()
+                ) 
+        print(f'epoch: [{epoch+1}/{epochs}] | ' +
+              f'loss: {round(loss.item(), 4)} | ' +
+              f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
 
 def plot_loss(self):
     '''
     Visualize the reconstruction loss for 
-    each batch observed during training
+    each batch observed during training,
+    computed on the training and test sets.
     
     Returns:
         fig:
@@ -40,7 +90,7 @@ def plot_loss(self):
     fig.add_trace(
         go.Scatter(
             y=self.test_loss,
-            line=dict(color='purple'),
+            line=dict(color='dodgerblue'),
             showlegend=True,
             name='Testing Loss'
         )
@@ -50,7 +100,7 @@ def plot_loss(self):
 
     fig.update_traces(hovertemplate='<br>'.join([
         'Batch Number: %{x}',
-        'RMSE: %{y:,.4f}'
+        'Loss: %{y:,.4f}'
     ]))
 
     fig.update_xaxes(title_text='Batch Number',
@@ -59,14 +109,15 @@ def plot_loss(self):
                      gridwidth=1, 
                      type='log')
 
-    fig.update_yaxes(title_text='RMSE',
+    fig.update_yaxes(title_text='Loss',
                      gridcolor='lightgray',
                      showgrid=True, 
                      gridwidth=1,
                      type='log')
 
     fig.update_layout(title_font_size=20,
-                      title_text='Training Reconstruction Loss',
+                      title_text='Reconstruction Loss' + \
+                      '<br><sup>Log-Log Scaled</sup>',
                       paper_bgcolor='rgba(0,0,0,0)',
                       plot_bgcolor='rgba(0,0,0,0)',
                       hoverlabel=dict(
@@ -76,30 +127,43 @@ def plot_loss(self):
                       font=dict(family='Rockwell', 
                                 color='navy',
                                 size=16), 
+                      legend=dict(
+                          bgcolor='white',
+                          yanchor='top',
+                          y=0.99,
+                          xanchor='right',
+                          x=0.99),
                       title_x=0.5)
     return fig
 
-def plot_projection(self, data, which='train_set', num_batches=10):
+def plot_projection(self, data, which='train_set', 
+                    num_batches=10, gamma=1e-3):
     '''
-    Provides a way to visualize the encoded transaction data
-    color coded by the the features, excluding day, month and year,
-    which are empirically isotropic in their distribution.
+    Visualize the encoded transaction data, color coded by the features, 
+    excluding day, month and year, which are isotropically distributed.
     
     Args: 
         data: 
             scripts.processing.Preprocessor object 
-            that contains the dataset of interest,
-            for example train_set or test_set
+            that contains the datasets of interest,
+            namely data.train_set and data.test_set
 
         which:
-            str, 'train_set' to plot the encoded training
-            data, else encode and plot the test_set data.
+            str, 'train_set' plots the encoded training
+            data, else the encoded test data in plotted.
             Default: 'train_set'
 
         num_batches:
             number of batches of 128 data points to
             project on two latent dimenstions 
             z.1 and z.2. Default: 10
+            
+        gamma:
+            weight applied to the Kullback–Leibler divergence
+            term of the loss function. Used in this context to
+            compute the reconstruction loss for individual
+            transactions to highlight outliers. 
+            Default: 1e-3 (0.001)
     
     Returns:
         fig:
@@ -114,7 +178,7 @@ def plot_projection(self, data, which='train_set', num_batches=10):
         z = self.encode(x.to(device))
         x_pred = self.decode(z).detach()
         z = z.to('cpu').detach()
-        scores = ((x - x_pred)**2).mean(axis=1).sqrt()
+        scores = ((x - x_pred)**2).sum(axis=1) + gamma*self.kl.detach()
         self.labels = torch.vstack((self.labels, y))
         self.projection = torch.vstack((self.projection, z))
         self.scores = torch.vstack((self.scores, scores.reshape(-1,1)))                   
@@ -122,7 +186,10 @@ def plot_projection(self, data, which='train_set', num_batches=10):
             self.labels = torch.hstack((self.labels, self.scores))
             break
 
-    data_ = data.recover_labels(self.labels[:,:-1])
+    data_ = pd.concat([
+        data.recover_labels(self.labels[:,:-1]), 
+        pd.Series(self.labels[:,-1].numpy())
+    ], axis=1)
 
     fig = px.scatter()
 
@@ -144,8 +211,8 @@ def plot_projection(self, data, which='train_set', num_batches=10):
     )
 
     fig.update_traces(
-            selector=dict(mode='markers'),
-            hovertemplate='<br>'.join([
+        selector=dict(mode='markers'),
+        hovertemplate='<br>'.join([
             'Transaction Amount: %{customdata[12]:$,.2f}'+\
             ', Sign: %{customdata[13]}',
             'Document Number: %{customdata[0]}',
@@ -157,7 +224,8 @@ def plot_projection(self, data, which='train_set', num_batches=10):
             'Contract Description: %{customdata[6]}',
             'Payment Method: %{customdata[7]}',
             'Date: %{customdata[8]}, %{customdata[10]}'+\
-            ' %{customdata[9]}, %{customdata[11]}',
+            ' %{customdata[9]}, %{customdata[11]}', 
+            'Reconstruction Loss: %{customdata[14]:,.4f}'
             ])
         )
 
@@ -188,7 +256,9 @@ def plot_projection(self, data, which='train_set', num_batches=10):
                      showgrid=True, 
                      gridwidth=1)
 
-    buttons = []
+    buttons = [] 
+    # Note: index 13 because data.features does not 
+    # include documet_no feature; self.labels does
     data.feature_names[13] = 'reconstruction_loss'                               
     for index, feature in data.feature_names.items():
         if index not in [8,9,10]: # exclude day, month, year (isotropic)
@@ -200,7 +270,7 @@ def plot_projection(self, data, which='train_set', num_batches=10):
                                   color='DarkSlateGrey')
                        )
               
-            #create a button object for the feature we are on
+            #create a button object to select a feature
             button = dict(label=feature,
                           method='update',
                           args=[{'marker':args}])
@@ -247,54 +317,7 @@ class AE(nn.Module):
         batch_norm:
             bool, True for implementing batch normalization
             before the two intermediary hidden layers of the
-            autoencoder network. Default: True.
-            
-    Attributes:
-        linear1: 
-            torch.nn.Linear, input layer of encoder
-        linear2: 
-            torch.nn.Linear, hidden layer of encoder
-        linear3: 
-            torch.nn.Linear, input layer of decoder
-        linear4: 
-            torch.nn.Linear, hidden layer of decoder
-    
-    Methods:
-        encode: 
-            forward pass through the encoder network
-            
-            args: 
-                x, torch.utils.data.DataLoader object that
-                contains the dataset of interest
-        
-        decode: 
-            forward pass through the decoder network
-            
-            args: 
-                x, encoded result from the self.encode method
-    
-        fit: 
-            backward pass through the network,
-            optimizing over parameter space by minimizing
-            squared reconstruction error.
-            
-            args: 
-                data: 
-                    torch.utils.data.DataLoader object 
-                    that contains the dataset of interest
-                
-                epochs:
-                    number of times to batch cycle through 
-                    all of the data being learned from. Default:1
-        
-        plot_loss: 
-            generate a plot of the reconstruction loss 
-            for each batch observed during training                
-        
-        plot_projection: 
-            generate a plot of the encoded data in
-            low-dimensional space.
-            
+            autoencoder network. Default: True.     
     '''
   
     def __init__(self, input_dims, latent_dims, 
@@ -310,8 +333,20 @@ class AE(nn.Module):
         self.linear2 = nn.Linear(512, latent_dims)
         self.linear3 = nn.Linear(latent_dims, 512)
         self.linear4 = nn.Linear(512, output_dims)
+        # dummy attribute for fit method
+        self.kl = torch.tensor([0])
         
     def encode(self, x):
+        '''
+        Forward pass through the encoder network
+        
+        Args: 
+            x, torch.FloatTensor of the data in the
+            input space
+            
+        Returns:
+            z, torch.FloatTensor object of encoded data
+        '''
         x = F.leaky_relu(
             self.bn1(self.linear1(x)) 
             if self.batch_norm 
@@ -320,50 +355,30 @@ class AE(nn.Module):
         return z
     
     def decode(self, z):
+        '''
+        Forward pass through the decoder network
+        
+        Args: 
+            z, torch.FloatTensor object of encoded data
+            
+        Returns:
+            x_pred, torch.FloatTensor object of decoded data
+        '''
         z = F.leaky_relu(
             self.bn2(self.linear3(z)) 
             if self.batch_norm 
             else self.linear3(z))
         x_pred = torch.sigmoid(self.linear4(z))
         return x_pred
-    
-    def fit(self, data, epochs=1):
-        '''
-        Train the autoencoder network
-        '''
-        self.test_loss = []
-        self.train_loss = []
-        test_set = itertools.cycle(data.test_set)
-        opt = torch.optim.Adam(self.parameters())
-        for epoch in range(epochs):
-            start_time = time.time()
-            for x_train, y_train in data.train_set:
-                self.train()
-                x_train = x_train.to(device) # use GPU if available
-                opt.zero_grad()
-                x_train_pred = self.decode(self.encode(x_train))
-                loss = F.mse_loss(x_train_pred, x_train).sqrt()
-                self.train_loss.append(loss.item())
-                loss.backward()
-                opt.step()
-                with torch.no_grad():
-                    self.eval()
-                    x_test = next(test_set)[0]
-                    x_test_pred = self.decode(self.encode(x_test))
-                    self.test_loss.append(
-                        F.mse_loss(x_test_pred, x_test).sqrt().item()
-                    ) 
-            print(f'epoch: [{epoch+1}/{epochs}] | ' +
-                  f'loss: {round(loss.item(), 4)} | ' +
-                  f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
-            
-    plot_projection = plot_projection
+
+    fit = fit      
     plot_loss = plot_loss
+    plot_projection = plot_projection
     
 class VAE(nn.Module):
     '''
     Variational autoencoder class to learn latent representation of the data.
-    Uses modified loss function that aims to minimize squared reconstruction error
+    Uses modified loss function that minimizes the squared reconstruction error
     plus the Kullback–Leibler divergence between the modeled distribution of the
     data and a normal distribution. 
     
@@ -380,43 +395,7 @@ class VAE(nn.Module):
         batch_norm:
             bool, True for implementing batch normalization
             before the two intermediary hidden layers of the
-            autoencoder network. Default: True.
-    
-    Attributes:
-        linear1: 
-            torch.nn.Linear, input layer of encoder
-        linear2: 
-            torch.nn.Linear, hidden layer of encoder, representing mu
-        linear3: 
-            torch.nn.Linear, input layer of decoder, representing sigma
-        linear4: 
-            torch.nn.Linear, hidden layer of decoder
-    
-    Methods:
-        encode: 
-            forward pass through the encoder network
-            
-            args: 
-                x, torch.utils.data.DataLoader object that
-                contains the dataset of interest
-        
-        decode: 
-            forward pass through the decoder network
-            
-            args: 
-            x, encoded result from the self.encode method
-    
-        fit: 
-            backward pass through the network,
-            optimizing over parameter space by minimizing
-            squared reconstruction error.
-            
-            args: 
-                data, torch.utils.data.DataLoader object 
-                that contains the dataset of interest
-
-                epochs, number of times to batch cycle through 
-                all of the data being learned from. default=1
+            autoencoder network. Default: True.  
     '''
     def __init__(self, input_dims, latent_dims, 
                  output_dims, batch_norm=True):
@@ -433,13 +412,29 @@ class VAE(nn.Module):
         self.linear4 = nn.Linear(latent_dims, 512)
         self.linear5 = nn.Linear(512, output_dims)
         self.N = torch.distributions.Normal(0, 1)
-        self.kl = 0
         
         # can use for sampling on GPU:
         # self.N.loc = self.N.loc.cuda()
         # self.N.scale = self.N.scale.cuda()
         
     def encode(self, x):
+        '''
+        Forward pass through the encoder network, with two encoding layers 
+        representing distributions of the mean and standard deviations of 
+        the overall distribution of the data being modeled. Includes a sampling 
+        step that samples a mean and standard deviation from each of these two
+        encoding layers to obtain a single encoding layer z. Includes the 
+        computation of the Kullback–Leibler divergence for the loss function.
+        
+        Args: 
+            x, torch.FloatTensor of the data in the
+            input space
+            
+        Returns:
+            z, torch.FloatTensor object of the sampled
+            mean and standard deviations from the two
+            encoding layers
+        '''
         x = F.leaky_relu(
             self.bn1(self.linear1(x)) 
             if self.batch_norm 
@@ -451,40 +446,25 @@ class VAE(nn.Module):
         return z
     
     def decode(self, z):
+        '''
+        Forward pass through the decoder network
+        
+        Args: 
+            z, torch.FloatTensor object of encoded data
+            
+        Returns:
+            x_pred, torch.FloatTensor object of decoded data
+        '''
         z = F.leaky_relu(
             self.bn2(self.linear4(z)) 
             if self.batch_norm 
             else self.linear4(z))
-        x_hat = torch.sigmoid(self.linear5(z))
-        return x_hat
+        x_pred = torch.sigmoid(self.linear5(z))
+        return x_pred
     
-    def fit(self, dataset, epochs=1, gamma=1):
-        self.test_loss = []
-        self.train_loss = []
-        opt = torch.optim.Adam(self.parameters())
-        for epoch in range(epochs):
-            start_time = time.time()
-            for (x_train, y_train), (x_test, y_test) in zip(data.train_set, data.test_set):
-                self.train()
-                x_train = x_train.to(device) # use GPU if available
-                opt.zero_grad()
-                x_train_pred = self.decode(self.encode(x_train))
-                loss = torch.sqrt(F.mse_loss(x_train_pred, x_train)) + gamma*self.kl
-                self.train_loss.append(loss)
-                loss.backward()
-                opt.step()
-                with torch.no_grad():
-                    self.eval()
-                    x_test_pred = self.decode(self.encode(x_test))
-                    self.test_loss.append(
-                        torch.sqrt(F.mse_loss(x_test_pred, x_test)) + gamma*self.kl
-                    ) 
-            print(f'epoch: [{epoch+1}/{epochs}] | ' +
-                  f'loss: {round(loss.detach().item(), 4)} | '+
-                  f'elapsed time: {round((time.time() - start_time)/60, 2)} minutes')
-                
-    plot_projection = plot_projection
+    fit = fit      
     plot_loss = plot_loss
+    plot_projection = plot_projection
                 
 def main():
     if len(sys.argv) == 4:
@@ -497,7 +477,7 @@ def main():
         
         print('Training the autoencoder...')
         model = AE(dims,2,dims) if model_choice == 'ae' else VAE(dims,2,dims)
-        model.fit(data.train_set, epochs=int(epochs))
+        model.fit(data, epochs=int(epochs))
         
         print('Model training complete! Saving model...')
         torch.save(model, 'data/trained_model')
