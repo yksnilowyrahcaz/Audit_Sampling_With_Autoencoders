@@ -53,15 +53,11 @@ Auditing standards require the assessment of the underlying transactions that co
 
 The Audit Risk Model defines audit risk as the combination of inherent risk, control risk and detection risk:
 
-<p style="text-align: center;font-size:20px;font-weight:700">
 $Audit Risk = Inherent Risk \times Control Risk \times Detection Risk$
-</p>
 
 Detection risk is composed of sampling risk and non-sampling risk:
 
-<p style="text-align: center;font-size:20px;font-weight:700">
 $Detection Risk= Sampling Risk + Non$-$Sampling Risk$
-</p>
 
 We focus our attention on sampling risk, which is defined as the risk that the auditor's conclusion based on the sample would be different had the entire population been tested. In other words, it is the risk that the sample is not representative of the population and does not provide sufficient appropriate audit evidence to detect material misstatements.
 
