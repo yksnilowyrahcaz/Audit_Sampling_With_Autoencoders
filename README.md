@@ -1,7 +1,7 @@
 # Audit Sampling With Autoencoders
 Seeing financial transactions in lower-dimensions with neural networks
 
-<img src="images/marbles.jpg" >
+<img src="images/marbles.jpg" width=600>
 
 # Acknowledgements
 This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf), as well as an excellent demonstration of autoencoders by Alexander Van de Kleut, entitled [Variational Autoencoders (VAE) with PyTorch](https://avandekleut.github.io/vae/).
