@@ -9,7 +9,7 @@ import datapane as dp
 import plotly.express as px
 import torch.nn.functional as F
 import plotly.graph_objects as go
-from .preprocessing import Preprocessor
+from preprocessing import Preprocessor
 
 # use GPU if available
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -497,7 +497,7 @@ def main():
             arg3: choice of model, ae for autoencoder or vae for variational autoencoder
             arg4: integer, number of epochs over which to train the model
 
-            Example: python scripts/models.py data/philly_payments_clean ae 5
+            Example: python models.py data/philly_payments_clean ae 5
             '''
         )
             

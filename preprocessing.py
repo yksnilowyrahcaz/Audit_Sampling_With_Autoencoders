@@ -29,7 +29,6 @@ class Preprocessor:
         '''
         
         # remove redundant columns, fill NaN with 'None', add features
-        start_time = time.time()
         print('Cleaning data...')
         df.department_title = df.department_title.str.split().apply(
             lambda x: ' '.join(x[1:len(x)]))
@@ -132,7 +131,6 @@ class Preprocessor:
                                    shuffle=True)
            
         print('Preprocessing complete!')
-        print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
         
         return self
 
@@ -165,8 +163,9 @@ def main():
         df = pd.read_csv(philly_payments_filepath)
         pre = Preprocessor()
         data = pre.process(df)
+        print('Saving preprocessed data to data/philly_payments_clean ...')
         torch.save(data, 'data/philly_payments_clean')
-        print('Preprocessing complete!')
+        print('Data saved')
         print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
     
     else:
@@ -174,7 +173,7 @@ def main():
             '''
         Please provide the filepath of the philly payments data.
             
-        Example: python data/preprocessing.py data/city_payments_fy2017.csv
+        Example: python preprocessing.py data/city_payments_fy2017.csv
             '''
         )
             
