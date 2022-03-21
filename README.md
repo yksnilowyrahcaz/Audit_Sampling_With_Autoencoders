@@ -12,9 +12,7 @@ This project is largely inspired by a paper published in 2020 by Marco Schreyer,
 3. [Project Motivation](#motivation)
 4. [About The Dataset](#data)
 5. [File Descriptions](#files)
-6. [Methodology](#method)
-7. [Results](#results)
-8. [Sources & References](#sources)
+6. [Results](#results)
 
 ## How To Use This Repository <a name="howto"></a>
 1. Download and unzip this repository to your local machine.
