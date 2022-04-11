@@ -98,4 +98,5 @@ This project is largely inspired by a paper published in 2020 by Marco Schreyer,
 
 ## License & copyright <a name="licence"></a>
 © Zachary Wolinsky 2022
+
 Licensed under the [MIT License](LICENSE.txt)
