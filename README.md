@@ -90,7 +90,6 @@ To demonstrate how autoencoders work, we analyze the [City of Philadelphia payme
 
 ## Results <a name="results"></a>
 
-<iframe src="https://datapane.com/reports/MA1QyaA/vae-batch-norm-projection/embed/" width="100%" height="540px" style="border: none;">IFrame not supported</iframe>
 
 To read more about this project, check out this Medium post (link coming soon).
 
