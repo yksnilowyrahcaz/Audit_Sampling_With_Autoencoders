@@ -1,5 +1,5 @@
 # Audit Sampling With Autoencoders
-Seeing financial transactions in lower-dimensions with neural networks
+Seeing financial transactions in lower dimensions with neural networks
 
 <img src="images/marbles.jpg" width=600>
 
@@ -41,12 +41,15 @@ Note: This is provided as an example, you can also chooose "vae" and a number of
 When training is complete an html file is generated providing a visualization of the embedded transaction data.
 
 ## Supporting Packages <a name="packages"></a>
-In addition to the standard python libraries, this notebook and analysis rely on the following packages:
+In addition to the standard python library, this analysis utilizes the following packages:
+- Datapane https://datapane.com/
+- NumPy https://numpy.org/?msclkid=8a02e767b93111ecae80e39be02e750a
+- pandas https://pandas.pydata.org/?msclkid=96098534b93111ec801d615628da32cd
 - PyTorch https://pytorch.org/
-- plotly https://plotly.com/
-- sklearn https://scikit-learn.org/stable/
+- Plotly https://plotly.com/
+- scikit-learn https://scikit-learn.org/stable/
 
-Please see `requirements.txt` for a complete list of packages and dependencies utilized in the making of this project
+Please see `requirements.txt` for a complete list of packages and dependencies used in the making of this project
 
 ## Project Motivation <a name="motivation"></a>
 Auditing standards require the assessment of the underlying transactions that comprise the financial statements to detect errors or fraud that would result in material misstatement. The accounting profession has developed a framework for addressing this requirement, known as the Audit Risk Model.
@@ -63,12 +66,12 @@ We focus our attention on sampling risk, which is defined as the risk that the a
 
 There are a variety of sampling methods used by auditors. Random sampling is based on each member of the population having an equal chance of being selected. Stratified sampling subdivides the population into homogenous groups from which to make selections. Monetary unit sampling treats each dollar amount from the population as the sampling unit and selects items when a cumulative total meets or exceeds a predefined sampling interval when cycling through the population.
 
-**Autoencoders** offer an alternative method for addressing sampling risk. An autoencoder is a neural network that learns to encode data into lower dimensions and decode it back into higher dimensions. The resulting model provides a low-dimensional representation of the data, disentangling it in a way that reveals something about the fundamental structure. Auditors can model transactions in this way and select from low-dimensional clusters. They can also identify anomalous transactions based on how much they deviate from other transactions in this latent space.
+**Autoencoders** offer an alternative method for addressing sampling risk. An autoencoder is a neural network that learns to encode data into lower dimensions and decode it back into higher dimensions. The resulting model provides a low-dimensional representation of the data, disentangling it in a way that reveals something about its fundamental structure. Auditors can model transactions in this way and select from low-dimensional clusters. They can also identify anomalous transactions based on how much they deviate from other transactions in this latent space.
 
 <img src="images/ae.png" width=600>
 
 ## About The Dataset <a name="data"></a>
-To demonstrate the use of autoencoders for financial transaction analysis, we will use the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in Schreyer et al (2020) and consists of nearly a quarter-million payments from about 60 city offices, departments, boards and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
+To demonstrate how autoencoders work, we analyze the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in [Schreyer et al (2020)](https://arxiv.org/pdf/2008.02528v1.pdf) and consists of nearly a quarter-million payments from 58 city offices, departments, boards, and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
 
 ## File Descriptions <a name="files"></a>
 | File | Description |
