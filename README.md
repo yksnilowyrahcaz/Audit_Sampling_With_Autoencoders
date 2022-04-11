@@ -10,6 +10,8 @@ Seeing financial transactions in lower dimensions with neural networks
 4. [Project Motivation](#motivation)
 5. [About The Dataset](#data)
 6. [Results](#results)
+7. [Acknowledgements] (#acknowledgements)
+8. [Licence & copyright] (#license)
 
 ## File Descriptions <a name="files"></a>
 | File | Description |
@@ -88,13 +90,13 @@ To demonstrate how autoencoders work, we analyze the [City of Philadelphia payme
 
 ## Results <a name="results"></a>
 
+<iframe src="https://datapane.com/reports/MA1QyaA/vae-batch-norm-projection/embed/" width="100%" height="540px" style="border: none;">IFrame not supported</iframe>
 
+To read more about this project, check out this Medium post (link coming soon).
 
-To read more about this project, check out this [Medium post](link coming soon).
-
-## Acknowledgements
+## Acknowledgements <a name="acknowledgments"></a>
 This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf), as well as an excellent demonstration of autoencoders by Alexander Van de Kleut, entitled [Variational Autoencoders (VAE) with PyTorch](https://avandekleut.github.io/vae/).
 
-## License & copyright
+## License & copyright <a name="licence"></a>
 © Zachary Wolinsky 2022
 Licensed under the [MIT License](LICENSE.txt)
