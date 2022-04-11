@@ -10,8 +10,8 @@ Seeing financial transactions in lower dimensions with neural networks
 4. [Project Motivation](#motivation)
 5. [About The Dataset](#data)
 6. [Results](#results)
-7. [Acknowledgements] (#acknowledgements)
-8. [Licence & copyright] (#license)
+7. [Acknowledgements](#acknowledgements)
+8. [Licence & copyright](#license)
 
 ## File Descriptions <a name="files"></a>
 | File | Description |
