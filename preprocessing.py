@@ -27,7 +27,7 @@ class Preprocessor:
                 pandas DataFrame, the result of calling
                 pd.read_csv('data/city_payments_fy2017.csv')
         '''
-        
+        start_time = time.time()        
         # remove redundant columns, fill NaN with 'None', add features
         print('Cleaning data...')
         df.department_title = df.department_title.str.split().apply(
@@ -68,7 +68,7 @@ class Preprocessor:
 
         df.fillna('None', inplace=True)
         
-        self.preprocessed = df
+        self.X = df
 
         # determine categorical and numerical features
         self.numerical = df.select_dtypes(include=['int64', 'float64']).columns
@@ -81,7 +81,7 @@ class Preprocessor:
                                       self.numerical.tolist()))
 
         # label encode categorical features
-        print('Label encoding the data...')
+        print('Label-encoding the data...')
         self.le = defaultdict(LabelEncoder)
         self.Y = df[self.categorical].apply(
             lambda x: self.le[x.name].fit_transform(x))
@@ -98,11 +98,11 @@ class Preprocessor:
 
         # create dummy variables to one-hot-encode
         print('One-hot-encoding the data...')
-        self.X_sample = pd.get_dummies(self.X_sample, drop_first=True)
+        self.X_sample_ohe = pd.get_dummies(self.X_sample, drop_first=True)
         
         # create training and test sets
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
-            self.X_sample, self.Y_sample, test_size=128*73, random_state=1729)
+            self.X_sample_ohe, self.Y_sample, test_size=128*73, random_state=1729)
 
         # min-max scale the transaction amount
         self.X_train.transaction_amount = MinMaxScaler().fit_transform(
@@ -121,16 +121,14 @@ class Preprocessor:
         # combine X_ and Y_ into a single dataset
         print('Combining tensors into one dataset...')
         self.train_set = TensorDataset(self.X_train, self.Y_train)
-        self.train_set = DataLoader(self.train_set, 
-                                    batch_size=128, 
-                                    shuffle=True)
+        self.train_set = DataLoader(self.train_set, batch_size=128, shuffle=True)
         
         self.test_set = TensorDataset(self.X_test, self.Y_test)
-        self.test_set = DataLoader(self.test_set, 
-                                   batch_size=128, 
-                                   shuffle=True)
+        self.test_set = DataLoader(self.test_set, batch_size=128, shuffle=True)
            
         print('Preprocessing complete!')
+        if __name__ != '__main__':
+            print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
         
         return self
 

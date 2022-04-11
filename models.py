@@ -171,7 +171,7 @@ def plot_projection(self, data, which='train_set',
     '''
     self.scores = torch.empty((0, 1))
     self.projection = torch.empty((0, self.latent_dims))
-    self.labels = torch.empty((0, data.preprocessed.shape[1]))
+    self.labels = torch.empty((0, data.Y.shape[1]))
     for i, (x, y) in enumerate(data.train_set 
                                if which == 'train_set' 
                                else data.test_set):
