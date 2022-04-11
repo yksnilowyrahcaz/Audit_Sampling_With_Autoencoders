@@ -90,13 +90,16 @@ To demonstrate how autoencoders work, we analyze the [City of Philadelphia payme
 
 ## Results <a name="results"></a>
 
+<img src="images/loss_plot.png" width=600>
+
+<img src="images/projection_plot.png" width=600>
 
 To read more about this project, check out this Medium post (link coming soon).
 
-## Acknowledgements <a name="acknowledgments"></a>
+## Acknowledgements <a name="acknowledgements"></a>
 This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf), as well as an excellent demonstration of autoencoders by Alexander Van de Kleut, entitled [Variational Autoencoders (VAE) with PyTorch](https://avandekleut.github.io/vae/).
 
-## License & copyright <a name="licence"></a>
+## License & copyright <a name="license"></a>
 © Zachary Wolinsky 2022
 
 Licensed under the [MIT License](LICENSE.txt)
