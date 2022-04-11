@@ -3,16 +3,32 @@ Seeing financial transactions in lower dimensions with neural networks
 
 <img src="images/marbles.jpg" width=600>
 
-# Acknowledgements
-This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf), as well as an excellent demonstration of autoencoders by Alexander Van de Kleut, entitled [Variational Autoencoders (VAE) with PyTorch](https://avandekleut.github.io/vae/).
-
 ## Table of Contents
-1. [How To Use This Repository](#howto)
+1. [File Descriptions](#files)
 2. [Supporting Packages](#packages)
-3. [Project Motivation](#motivation)
-4. [About The Dataset](#data)
-5. [File Descriptions](#files)
+3. [How To Use This Repository](#howto)
+4. [Project Motivation](#motivation)
+5. [About The Dataset](#data)
 6. [Results](#results)
+
+## File Descriptions <a name="files"></a>
+| File | Description |
+| :--- | :--- |
+| data/city_payments_fy2017.csv | features: dept, trans amount, date, purchased item, etc.|
+| ASWA.ipynb | jupter notebook used to develop analysis |
+| preprocessing.py | module for ETL, prepares data for neural network |
+| models.py | module with autoencoder classes and methods for analysis |
+
+## Supporting Packages <a name="packages"></a>
+In addition to the standard python library, this analysis utilizes the following packages:
+- Datapane https://datapane.com/
+- NumPy https://numpy.org/?msclkid=8a02e767b93111ecae80e39be02e750a
+- pandas https://pandas.pydata.org/?msclkid=96098534b93111ec801d615628da32cd
+- PyTorch https://pytorch.org/
+- Plotly https://plotly.com/
+- scikit-learn https://scikit-learn.org/stable/
+
+Please see `requirements.txt` for a complete list of packages and dependencies used in the making of this project
 
 ## How To Use This Repository <a name="howto"></a>
 1. Download and unzip this repository to your local machine.
@@ -40,17 +56,6 @@ This project is largely inspired by a paper published in 2020 by Marco Schreyer,
 Note: This is provided as an example, you can also chooose "vae" and a number of epochs other than 5. 
 When training is complete an html file is generated providing a visualization of the embedded transaction data.
 
-## Supporting Packages <a name="packages"></a>
-In addition to the standard python library, this analysis utilizes the following packages:
-- Datapane https://datapane.com/
-- NumPy https://numpy.org/?msclkid=8a02e767b93111ecae80e39be02e750a
-- pandas https://pandas.pydata.org/?msclkid=96098534b93111ec801d615628da32cd
-- PyTorch https://pytorch.org/
-- Plotly https://plotly.com/
-- scikit-learn https://scikit-learn.org/stable/
-
-Please see `requirements.txt` for a complete list of packages and dependencies used in the making of this project
-
 ## Project Motivation <a name="motivation"></a>
 Auditing standards require the assessment of the underlying transactions that comprise the financial statements to detect errors or fraud that would result in material misstatement. The accounting profession has developed a framework for addressing this requirement, known as the Audit Risk Model.
 
@@ -73,14 +78,15 @@ There are a variety of sampling methods used by auditors. Random sampling is bas
 ## About The Dataset <a name="data"></a>
 To demonstrate how autoencoders work, we analyze the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in [Schreyer et al (2020)](https://arxiv.org/pdf/2008.02528v1.pdf) and consists of nearly a quarter-million payments from 58 city offices, departments, boards, and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
 
-## File Descriptions <a name="files"></a>
-| File | Description |
-| :--- | :--- |
-| data/city_payments_fy2017.csv | features: dept, trans amount, date, purchased item, etc.|
-| ASWA.ipynb | jupter notebook used to develop analysis |
-| preprocessing.py | module for ETL, prepares data for neural network |
-| models.py | module with autoencoder classes and methods for analysis |
-
 ## Results <a name="results"></a>
 
-More about this project can be found at the Medium blog post (link coming soon).
+
+
+To read more about this project, check out this [Medium post](link coming soon).
+
+## Acknowledgements
+This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf), as well as an excellent demonstration of autoencoders by Alexander Van de Kleut, entitled [Variational Autoencoders (VAE) with PyTorch](https://avandekleut.github.io/vae/).
+
+## License & copyright
+© Zachary Wolinsky 2022
+Licensed under the [MIT License](LICENSE.txt)
