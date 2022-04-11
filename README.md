@@ -69,13 +69,13 @@ Detection risk is composed of sampling risk and non-sampling risk:
 
 <img src="images/detection risk decomposition.png" width=500>
 
-We focus our attention on sampling risk, which is defined as the risk that the auditor's conclusion based on the sample would be different had the entire population been tested. In other words, it is the risk that the sample is not representative of the population and does not provide sufficient appropriate audit evidence to detect material misstatements.
+Sampling risk is defined as the risk that the auditor's conclusion based on the sample would be different had the entire population been tested. In other words, it is the risk that the sample is not representative of the population and does not provide sufficient appropriate audit evidence to detect material misstatements.
 
 There are a variety of sampling methods used by auditors. Random sampling is based on each member of the population having an equal chance of being selected. Stratified sampling subdivides the population into homogenous groups from which to make selections. Monetary unit sampling treats each dollar amount from the population as the sampling unit and selects items when a cumulative total meets or exceeds a predefined sampling interval when cycling through the population.
 
 **Autoencoders** offer an alternative method for addressing sampling risk. An autoencoder is a neural network that learns to encode data into lower dimensions and decode it back into higher dimensions. The resulting model provides a low-dimensional representation of the data, disentangling it in a way that reveals something about its fundamental structure. Auditors can model transactions in this way and select from low-dimensional clusters. They can also identify anomalous transactions based on how much they deviate from other transactions in this latent space.
 
-In this demonstration we consider the traditional autoencoder:
+In this demonstration, we consider the traditional autoencoder:
 
 <img src="images/ae.png" width=600>
 
