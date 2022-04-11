@@ -23,12 +23,12 @@ Seeing financial transactions in lower dimensions with neural networks
 
 ## Supporting Packages <a name="packages"></a>
 In addition to the standard python library, this analysis utilizes the following packages:
-- Datapane https://datapane.com/
-- NumPy https://numpy.org/?msclkid=8a02e767b93111ecae80e39be02e750a
-- pandas https://pandas.pydata.org/?msclkid=96098534b93111ec801d615628da32cd
-- PyTorch https://pytorch.org/
-- Plotly https://plotly.com/
-- scikit-learn https://scikit-learn.org/stable/
+- [Datapane](https://datapane.com/)
+- [NumPy](https://numpy.org/?msclkid=8a02e767b93111ecae80e39be02e750a)
+- [pandas](https://pandas.pydata.org/?msclkid=96098534b93111ec801d615628da32cd)
+- [PyTorch](https://pytorch.org/)
+- [Plotly](https://plotly.com/)
+- [scikit-learn](https://scikit-learn.org/stable/)
 
 Please see `requirements.txt` for a complete list of packages and dependencies used in the making of this project
 
