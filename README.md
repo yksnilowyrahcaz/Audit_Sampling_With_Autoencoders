@@ -81,9 +81,15 @@ In this demonstration, we consider the traditional autoencoder:
 
 as well as a **variational autoencoder**:
 
-<img src="images/vae2.png" width=600>
+<img src="images/vae.png" width=600>
 
 There is an important distinction between a variational autoencoder and  a traditional autoencoder. There are generally two output layers of the encoder that represent the means and standard deviations of the underlying distributions of the data. Further, the latent matrix Z is determined by sampling from a Gaussian distribution parameterized by the learned means and standard deviations of the latent space.
+
+Now, it is not actually feasible to perform backpropagation with the configuration above because the sampling operation is not differentiable. In practice, we instead sample a random matrix epsilon from a normal distribution and scale the latent standard deviations by epsilon by applying the element-wise product. We then add the result to the latent means to obtain the latent embedding Z.
+
+<img src="images/vae2.png" width=600>
+
+Structuring the network in this way allows for both stochastic sampling and differentiation with respect to the latent means and standard deviations.
 
 ## About The Dataset <a name="data"></a>
 To demonstrate how autoencoders work, we analyze the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in [Schreyer et al (2020)](https://arxiv.org/pdf/2008.02528v1.pdf) and consists of nearly a quarter-million payments from 58 city offices, departments, boards, and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
