@@ -57,7 +57,7 @@ def fit(self, data, epochs=1, gamma=1e-3):
             opt.step()
             with torch.no_grad():
                 self.eval()
-                x_test = next(test_set)[0]
+                x_test = next(test_set)[0].to(device)
                 x_test_pred = self.decode(self.encode(x_test))
                 self.test_loss.append(
                     (((x_test - x_test_pred)**2).sum() + gamma*self.kl).item()

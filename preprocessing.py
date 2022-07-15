@@ -127,8 +127,6 @@ class Preprocessor:
         self.test_set = DataLoader(self.test_set, batch_size=128, shuffle=True)
            
         print('Preprocessing complete!')
-        if __name__ != '__main__':
-            print(f'Total Time: {round((time.time() - start_time)/60, 2)} minutes')
         
         return self
 
