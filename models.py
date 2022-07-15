@@ -263,7 +263,7 @@ def plot_projection(self, data, which='train_set',
     for index, feature in data.feature_names.items():
         if index not in [8,9,10]: # exclude day, month, year (isotropic)
             args = dict(size=10,
-                        color=self.labels[:,index+1],
+                        color=self.labels[:,index+1], # +1 because self.labels has document_no in 0 index, while data.feature_names does not
                         colorscale=fig.data[0].marker.colorscale 
                         if index != 13 else '',
                         line=dict(width=0.5,
