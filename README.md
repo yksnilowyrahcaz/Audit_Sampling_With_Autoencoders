@@ -19,7 +19,7 @@ Seeing financial transactions in lower dimensions with neural networks
 | File | Description |
 | :--- | :--- |
 | data/city_payments_fy2017.csv | features: dept, trans amount, date, purchased item, etc.|
-| ASWA.ipynb | jupter notebook used to develop analysis |
+| ASWA.ipynb | jupyter notebook used to develop analysis |
 | preprocessing.py | module for ETL, prepares data for neural network |
 | models.py | module with autoencoder classes and methods for analysis |
 
