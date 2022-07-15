@@ -256,10 +256,10 @@ def plot_projection(self, data, which='train_set',
                      showgrid=True, 
                      gridwidth=1)
 
-    buttons = [] 
-    # Note: index 13 because data.features does not 
-    # include documet_no feature; self.labels does
-    data.feature_names[13] = 'reconstruction_loss'                               
+    buttons = []
+    # Note: index 13 because data.features does not include
+    # reconstruction_loss feature, while self.labels does
+    data.feature_names[13] = 'reconstruction_loss'                              
     for index, feature in data.feature_names.items():
         if index not in [8,9,10]: # exclude day, month, year (isotropic)
             args = dict(size=10,
