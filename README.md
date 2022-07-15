@@ -89,7 +89,7 @@ In this demonstration, we consider the traditional autoencoder:
 
 as well as a **variational autoencoder**:
 
-<p align="center>
+<p align="center">
 <img src="images/vae.png" width=600>
 <p/>
 
@@ -97,7 +97,7 @@ There is an important distinction between a variational autoencoder and  a tradi
 
 Now, it is not actually feasible to perform backpropagation with the configuration above because the sampling operation is not differentiable. In practice, we instead sample a random matrix epsilon from a normal distribution and scale the latent standard deviations by epsilon by applying the element-wise product. We then add the result to the latent means to obtain the latent embedding Z.
 
-<p align="center>
+<p align="center">
 <img src="images/vae2.png" width=600>
 <p/>
 
