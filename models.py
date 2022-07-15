@@ -144,8 +144,8 @@ def plot_projection(self, data, which='train_set',
     
     Args: 
         data: 
-            scripts.processing.Preprocessor object 
-            that contains the datasets of interest,
+            processing.Preprocessor object that
+            contains the datasets of interest,
             namely data.train_set and data.test_set
 
         which:
