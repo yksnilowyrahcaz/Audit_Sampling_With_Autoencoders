@@ -63,23 +63,11 @@ Auditing standards require the assessment of the underlying transactions that co
 
 The Audit Risk Model defines audit risk as the combination of inherent risk, control risk and detection risk:
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/audit risk model.png'>
-</img>
+<img src="images/audit risk model.png" width=600>
 
 Detection risk is composed of sampling risk and non-sampling risk:
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/detection risk decomposition.png'>
-</img>
+<img src="images/detection risk decomposition.png" width=600>
 
 Sampling risk is defined as the risk that the auditor's conclusion based on the sample would be different had the entire population been tested. In other words, it is the risk that the sample is not representative of the population and does not provide sufficient appropriate audit evidence to detect material misstatements.
 
@@ -89,35 +77,17 @@ There are a variety of sampling methods used by auditors. Random sampling is bas
 
 In this demonstration, we consider the traditional autoencoder:
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/ae.png'>
-</img>
+<img src="images/ae.png" width=600>
 
 as well as a **variational autoencoder**:
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/vae.png'>
-</img>
+<img src="images/vae.png" width=600>
 
 There is an important distinction between a variational autoencoder and  a traditional autoencoder. There are generally two output layers of the encoder that represent the means and standard deviations of the underlying distributions of the data. Further, the latent matrix Z is determined by sampling from a Gaussian distribution parameterized by the learned means and standard deviations of the latent space.
 
 Now, it is not actually feasible to perform backpropagation with the configuration above because the sampling operation is not differentiable. In practice, we instead sample a random matrix epsilon from a normal distribution and scale the latent standard deviations by epsilon by applying the element-wise product. We then add the result to the latent means to obtain the latent embedding Z.
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/vae2.png'>
-</img>
+<img src="images/vae2.png" width=600>
 
 Structuring the network in this way allows for both stochastic sampling and differentiation with respect to the latent means and standard deviations.
 
@@ -126,21 +96,9 @@ To demonstrate how autoencoders work, we analyze the [City of Philadelphia payme
 
 ## Results <a name="results"></a>
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/loss_plot.png'>
-</img>
+<img src="images/loss_plot.png" width=600>
 
-<img 
-    style='display: block; 
-           margin-left: auto;
-           margin-right: auto;
-           width: 50%;'
-    src='images/projection_plot.png'>
-</img>
+<img src="images/projection_plot.png" width=600>
 
 To read more about this project, check out this [Medium post](https://medium.com/@zacharywolinsky/audit-sampling-with-autoencoders-90ddd54fd1c).
 
