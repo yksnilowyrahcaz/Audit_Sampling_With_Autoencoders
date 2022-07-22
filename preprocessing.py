@@ -27,7 +27,7 @@ class Preprocessor:
                 pandas DataFrame, the result of calling
                 pd.read_csv('data/city_payments_fy2017.csv')
         '''
-        start_time = time.time()        
+     
         # remove redundant columns, fill NaN with 'None', add features
         print('Cleaning data...')
         df.department_title = df.department_title.str.split().apply(
