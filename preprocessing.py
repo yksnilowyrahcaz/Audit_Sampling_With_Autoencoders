@@ -49,18 +49,25 @@ class Preprocessor:
 
         df['weekday'] = df.check_date.str.split('-').apply(
             lambda x: calendar.day_name[
-            datetime.datetime(int(x[0]), 
-                              int(x[1]), 
-                              int(x[2])).weekday()])
+                datetime.datetime(
+                    int(x[0]), 
+                    int(x[1]), 
+                    int(x[2])
+                ).weekday()
+            ]
+        )
 
         df['day'] = df.check_date.str.split('-').apply(
-            lambda x: x[2])
+            lambda x: x[2]
+        )
 
         df['month'] = df.check_date.str.split('-').apply(
-            lambda x: calendar.month_name[int(x[1])])
+            lambda x: calendar.month_name[int(x[1])]
+        )
 
         df['year'] = df.check_date.str.split('-').apply(
-            lambda x: x[0])
+            lambda x: x[0]
+        )
 
         df.drop(['fy', 'fm', 'check_date', 'dept', 'char_', 'sub_obj', 
                  'doc_ref_no_prefix','contract_number'], 
@@ -75,26 +82,30 @@ class Preprocessor:
         self.categorical = df.select_dtypes(include=['object', 'bool']).columns
         
         # get feature names for plotting
-        self.feature_names = dict(zip(range(len(self.categorical) +\
-                                            len(self.numerical)-1),
-                                      self.categorical.tolist()[1:] +\
-                                      self.numerical.tolist()))
+        self.feature_names = dict(
+            zip(
+                range(len(self.categorical) + len(self.numerical) - 1),
+                self.categorical.tolist()[1:] + self.numerical.tolist()
+            )
+        )
 
         # label encode categorical features
         print('Label-encoding the data...')
         self.le = defaultdict(LabelEncoder)
         self.Y = df[self.categorical].apply(
-            lambda x: self.le[x.name].fit_transform(x))
+            lambda x: self.le[x.name].fit_transform(x)
+        )
         self.Y = pd.concat([self.Y, df[self.numerical]], axis=1)
 
         # take a sample that will become our X matrix
         print('Sampling from the original data...')
-        self.X_sample = df.sample(n=128*373, random_state=1729).drop(
-            columns='document_no')
+        self.X_sample = df.sample(
+            n=128 * 373, random_state=1729
+        ).drop(columns='document_no')
 
         # take another sample using the same random_sate
         # thus, same indices as df_sample, to use to recover labels
-        self.Y_sample = self.Y.sample(n=128*373, random_state=1729)
+        self.Y_sample = self.Y.sample(n=128 * 373, random_state=1729)
 
         # create dummy variables to one-hot-encode
         print('One-hot-encoding the data...')
@@ -102,14 +113,17 @@ class Preprocessor:
         
         # create training and test sets
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
-            self.X_sample_ohe, self.Y_sample, test_size=128*73, random_state=1729)
+            self.X_sample_ohe, self.Y_sample, test_size=128 * 73, random_state=1729
+        )
 
         # min-max scale the transaction amount
         self.X_train.transaction_amount = MinMaxScaler().fit_transform(
-            self.X_train.transaction_amount.to_numpy().reshape(-1,1))
+            self.X_train.transaction_amount.to_numpy().reshape(-1,1)
+        )
         
         self.X_test.transaction_amount = MinMaxScaler().fit_transform(
-            self.X_test.transaction_amount.to_numpy().reshape(-1,1))
+            self.X_test.transaction_amount.to_numpy().reshape(-1,1)
+        )
         
         # create tensors
         print('Generating tensors...')
@@ -144,7 +158,7 @@ class Preprocessor:
             with interpretable labels instead of encoded numbers
         '''
         recovered_Y = pd.concat([
-            pd.DataFrame(Y, columns=self.Y_sample.columns)[self.categorical]\
+            pd.DataFrame(Y, columns=self.Y_sample.columns)[self.categorical] \
             .astype('int32').apply(lambda x: self.le[x.name].inverse_transform(x)), 
             pd.DataFrame(Y, columns=self.Y_sample.columns)[self.numerical]
         ], axis=1)

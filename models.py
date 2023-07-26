@@ -16,14 +16,15 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
 # ...............................SHARED FUNCTIONS..................................#
-#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#  
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
 
 def fit(self, data, epochs=1, gamma=1e-3):
     '''
-    Iteratively train the autoencoder,
-    optimizing over parameter space by minimizing
-    mean squared error (MSE). Collect training
-    and validation losses for model evaluation.
+    Iteratively train the autoencoder, optimizing over parameter space 
+    by minimizing mean squared error (MSE). If used with a variational
+    autoencoder, also minimizes Kullback-Leibler Divergence (KLD) from
+    a standard normal distribution. Collects training and validation 
+    losses for model evaluation.
 
     Args: 
         data: 
@@ -46,7 +47,7 @@ def fit(self, data, epochs=1, gamma=1e-3):
     opt = torch.optim.Adam(self.parameters())
     for epoch in range(epochs):
         start_time = time.time()
-        for x_train, y_train in data.train_set:
+        for x_train, _ in data.train_set:
             self.train()
             x_train = x_train.to(device)
             opt.zero_grad()
@@ -98,48 +99,65 @@ def plot_loss(self):
 
     fig.update_traces(mode='lines')
 
-    fig.update_traces(hovertemplate='<br>'.join([
-        'Batch Number: %{x}',
-        'Loss: %{y:,.4f}'
-    ]))
+    fig.update_traces(
+        hovertemplate='<br>'.join([
+            'Batch Number: %{x}',
+            'Loss: %{y:,.4f}'
+        ])
+    )
 
-    fig.update_xaxes(title_text='Batch Number',
-                     gridcolor='lightgray',
-                     showgrid=True, 
-                     gridwidth=1, 
-                     type='log')
+    fig.update_xaxes(
+        title_text='Batch Number',
+        gridcolor='lightgray',
+        showgrid=True, 
+        gridwidth=1, 
+        type='log'
+    )
 
-    fig.update_yaxes(title_text='Loss',
-                     gridcolor='lightgray',
-                     showgrid=True, 
-                     gridwidth=1,
-                     type='log')
+    fig.update_yaxes(
+        title_text='Loss',
+        gridcolor='lightgray',
+        showgrid=True, 
+        gridwidth=1,
+        type='log'
+    )
 
-    fig.update_layout(title_font_size=20,
-                      title_text='Reconstruction Loss' + \
-                      '<br><sup>Log-Log Scaled</sup>',
-                      paper_bgcolor='rgba(0,0,0,0)',
-                      plot_bgcolor='rgba(0,0,0,0)',
-                      hoverlabel=dict(
-                          bgcolor='ivory',
-                          font_size=16,
-                          font_family='Rockwell'),
-                      font=dict(family='Rockwell', 
-                                color='navy',
-                                size=16), 
-                      legend=dict(
-                          bgcolor='white',
-                          yanchor='top',
-                          y=0.99,
-                          xanchor='right',
-                          x=0.99),
-                      title_x=0.5)
+    fig.update_layout(
+        title_font_size=20,
+        title_text='Reconstruction Loss' + \
+        '<br><sup>Log-Log Scaled</sup>',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        hoverlabel=dict(
+            bgcolor='ivory',
+            font_size=16,
+            font_family='Rockwell'
+        ),
+        font=dict(
+            family='Rockwell', 
+            color='navy',
+            size=16
+        ), 
+        legend=dict(
+            bgcolor='white',
+            yanchor='top',
+            y=0.99,
+            xanchor='right',
+            x=0.99
+        ),
+        title_x=0.5
+    )
     return fig
 
-def plot_projection(self, data, which='train_set', 
-                    num_batches=10, gamma=1e-3):
+def plot_projection(
+    self, 
+    data, 
+    which='train_set',
+    num_batches=10, 
+    gamma=1e-3
+):
     '''
-    Visualize the encoded transaction data, color coded by the features, 
+    Visualize the encoded transaction data, color coded by the features,
     excluding day, month and year, which are isotropically distributed.
     
     Args: 
@@ -172,38 +190,45 @@ def plot_projection(self, data, which='train_set',
     self.scores = torch.empty((0, 1))
     self.projection = torch.empty((0, self.latent_dims))
     self.labels = torch.empty((0, data.Y.shape[1]))
-    for i, (x, y) in enumerate(data.train_set 
-                               if which == 'train_set' 
-                               else data.test_set):
-        z = self.encode(x.to(device))
-        x_pred = self.decode(z).detach()
-        z = z.to('cpu').detach()
-        scores = ((x - x_pred)**2).sum(axis=1) + gamma*self.kl.detach()
-        self.labels = torch.vstack((self.labels, y))
-        self.projection = torch.vstack((self.projection, z))
-        self.scores = torch.vstack((self.scores, scores.reshape(-1,1)))                   
-        if i == num_batches - 1:
-            self.labels = torch.hstack((self.labels, self.scores))
-            break
+    for i, (x, y) in enumerate(
+        data.train_set 
+        if which == 'train_set' 
+        else data.test_set
+    ):
+        with torch.no_grad():
+            self.eval()
+            z = self.encode(x.to(device))
+            x_pred = self.decode(z).detach()
+            z = z.to('cpu').detach()
+            scores = ((x - x_pred)**2).sum(axis=1) + gamma*self.kl.detach()
+            self.labels = torch.vstack((self.labels, y))
+            self.projection = torch.vstack((self.projection, z))
+            self.scores = torch.vstack((self.scores, scores.reshape(-1, 1)))
+            if i == num_batches - 1:
+                self.labels = torch.hstack((self.labels, self.scores))
+                break
 
     data_ = pd.concat([
-        data.recover_labels(self.labels[:,:-1]), 
-        pd.Series(self.labels[:,-1].numpy())
+        data.recover_labels(self.labels[:, :-1]), 
+        pd.Series(self.labels[:, -1].numpy())
     ], axis=1)
 
     fig = px.scatter()
 
     fig.add_trace(
         go.Scatter(
-            x=self.projection[:,0], 
-            y=self.projection[:,1],
+            x=self.projection[:, 0], 
+            y=self.projection[:, 1],
             mode='markers',
-            marker=dict(size=10,
-                        color=self.labels[:,5],
-                        colorscale=px.colors.qualitative.Set3,
-                        line=dict(width=0.5,
-                                  color='DarkSlateGrey'),
-                       ),
+            marker=dict(
+                size=10,
+                color=self.labels[:, 5],
+                colorscale=px.colors.qualitative.Set3,
+                line=dict(
+                    width=0.5,
+                    color='DarkSlateGrey'
+                ),
+            ),
             showlegend=False,
             customdata=data_,
             name=''
@@ -213,7 +238,7 @@ def plot_projection(self, data, which='train_set',
     fig.update_traces(
         selector=dict(mode='markers'),
         hovertemplate='<br>'.join([
-            'Transaction Amount: %{customdata[12]:$,.2f}'+\
+            'Transaction Amount: %{customdata[12]:$,.2f}' + \
             ', Sign: %{customdata[13]}',
             'Document Number: %{customdata[0]}',
             'Department Title: %{customdata[1]}',
@@ -223,11 +248,11 @@ def plot_projection(self, data, which='train_set',
             'Doc Ref No. Prefix Definition: %{customdata[5]}',
             'Contract Description: %{customdata[6]}',
             'Payment Method: %{customdata[7]}',
-            'Date: %{customdata[8]}, %{customdata[10]}'+\
+            'Date: %{customdata[8]}, %{customdata[10]}' + \
             ' %{customdata[9]}, %{customdata[11]}', 
             'Reconstruction Loss: %{customdata[14]:,.4f}'
-            ])
-        )
+        ])
+    )
 
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
@@ -235,61 +260,74 @@ def plot_projection(self, data, which='train_set',
         font=dict(
             family='Rockwell', 
             size=16, 
-            color='navy'),
+            color='navy'
+        ),
         hoverlabel=dict(
             font_size=14,
-            font_family='Rockwell'),
-        title_text='Low-dimensional projection of' +\
+            font_family='Rockwell'
+        ),
+        title_text='Low-dimensional projection of' + \
         '<br>the Philadelphia payments data',
         title_font_size=18,
         title_y=.92,
         title_x=.95,
-        xaxis={'title':'Z.1'},
-        yaxis={'title':'Z.2'}
+        xaxis={'title': 'Z.1'},
+        yaxis={'title': 'Z.2'}
     )
 
-    fig.update_xaxes(gridcolor='lightgray',
-                     showgrid=True, 
-                     gridwidth=1)
+    fig.update_xaxes(
+        gridcolor='lightgray',
+        showgrid=True, 
+        gridwidth=1
+    )
 
-    fig.update_yaxes(gridcolor='lightgray',
-                     showgrid=True, 
-                     gridwidth=1)
+    fig.update_yaxes(
+        gridcolor='lightgray',
+        showgrid=True, 
+        gridwidth=1
+    )
 
     buttons = []
     # Note: index 13 because data.features does not include
     # reconstruction_loss feature, while self.labels does
     data.feature_names[13] = 'reconstruction_loss'                              
     for index, feature in data.feature_names.items():
-        if index not in [8,9,10]: # exclude day, month, year (isotropic)
-            args = dict(size=10,
-                        color=self.labels[:,index+1], # +1 because self.labels has document_no in 0 index, while data.feature_names does not
-                        colorscale=fig.data[0].marker.colorscale 
-                        if index != 13 else '',
-                        line=dict(width=0.5,
-                                  color='DarkSlateGrey')
-                       )
+        if index not in [8, 9, 10]: # exclude day, month, year (isotropic)
+            args = dict(
+                size=10,
+                color=self.labels[:, index + 1], # +1 because self.labels has document_no in 0 index, while data.feature_names does not
+                colorscale=fig.data[0].marker.colorscale 
+                if index != 13 else '',
+                line=dict(
+                    width=0.5,
+                    color='DarkSlateGrey'
+                )
+            )
               
             #create a button object to select a feature
-            button = dict(label=feature,
-                          method='update',
-                          args=[{'marker':args}])
+            button = dict(
+                label=feature,
+                method='update',
+                args=[{'marker': args}]
+            )
 
             #add the button to our list of buttons
             buttons.append(button)
 
     fig.update_layout(
-        updatemenus=[dict(
-            active=4,
-            font={'size':12},
-            bgcolor='white',
-            type='dropdown',
-            buttons=buttons,
-            xanchor='left',
-            yanchor='bottom',
-            y=1,
-            x=0,
-        )], 
+        updatemenus=[
+            dict(
+                active=4,
+                font={'size': 12},
+                bgcolor='white',
+                type='dropdown',
+                buttons=buttons,
+                xanchor='left',
+                yanchor='bottom',
+                y=1,
+                x=0
+            )
+        ], 
     )
 
     return fig
@@ -297,13 +335,13 @@ def plot_projection(self, data, which='train_set',
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
 # .............................AUTOENCODER CLASSES.................................#
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#     
-    
+
 class AE(nn.Module):
     '''
     Autoencoder class to learn a latent representation of the data.
     Uses adaptive moment estimation (Adam) to optimize the squared 
     reconstruction error over the parameter space.
-    
+
     Args:
         input_dims:
             int, number of dimensions of the input space
@@ -319,9 +357,14 @@ class AE(nn.Module):
             before the two intermediary hidden layers of the
             autoencoder network. Default: True.     
     '''
-  
-    def __init__(self, input_dims, latent_dims, 
-                 output_dims, batch_norm=True):
+
+    def __init__(
+        self, 
+        input_dims, 
+        latent_dims, 
+        output_dims, 
+        batch_norm=True
+    ):
         super().__init__()
         self.batch_norm = batch_norm
         self.bn1 = nn.BatchNorm1d(512)
@@ -335,7 +378,7 @@ class AE(nn.Module):
         self.linear4 = nn.Linear(512, output_dims)
         # dummy attribute for fit method
         self.kl = torch.tensor([0])
-        
+
     def encode(self, x):
         '''
         Forward pass through the encoder network
@@ -343,17 +386,18 @@ class AE(nn.Module):
         Args: 
             x, torch.FloatTensor of the data in the
             input space
-            
+
         Returns:
             z, torch.FloatTensor object of encoded data
         '''
-        x = F.leaky_relu(
+        h = F.leaky_relu(
             self.bn1(self.linear1(x)) 
             if self.batch_norm 
-            else self.linear1(x))
-        z = self.linear2(x)
+            else self.linear1(x)
+        )
+        z = self.linear2(h)
         return z
-    
+
     def decode(self, z):
         '''
         Forward pass through the decoder network
@@ -364,11 +408,12 @@ class AE(nn.Module):
         Returns:
             x_pred, torch.FloatTensor object of decoded data
         '''
-        z = F.leaky_relu(
+        h = F.leaky_relu(
             self.bn2(self.linear3(z)) 
             if self.batch_norm 
-            else self.linear3(z))
-        x_pred = torch.sigmoid(self.linear4(z))
+            else self.linear3(z)
+        )
+        x_pred = torch.sigmoid(self.linear4(h))
         return x_pred
 
     fit = fit      
@@ -379,8 +424,8 @@ class VAE(nn.Module):
     '''
     Variational autoencoder class to learn latent representation of the data.
     Uses modified loss function that minimizes the squared reconstruction error
-    plus the Kullback–Leibler divergence between the modeled distribution of the
-    data and a normal distribution. 
+    plus the Kullback–Leibler divergence between a Gaussian prior distribution
+    and the latent posterier distribution.
     
     Args:
         input_dims:
@@ -397,8 +442,13 @@ class VAE(nn.Module):
             before the two intermediary hidden layers of the
             autoencoder network. Default: True.  
     '''
-    def __init__(self, input_dims, latent_dims, 
-                 output_dims, batch_norm=True):
+    def __init__(
+        self, 
+        input_dims, 
+        latent_dims, 
+        output_dims, 
+        batch_norm=True
+    ):
         super().__init__()
         self.batch_norm = batch_norm
         self.bn1 = nn.BatchNorm1d(512)
@@ -419,47 +469,61 @@ class VAE(nn.Module):
         
     def encode(self, x):
         '''
-        Forward pass through the encoder network, with two encoding layers 
-        representing distributions of the mean and standard deviations of 
-        the overall distribution of the data being modeled. Includes a sampling 
-        step that samples a mean and standard deviation from each of these two
-        encoding layers to obtain a single encoding layer z. Includes the 
-        computation of the Kullback–Leibler divergence for the loss function.
+        Forward pass through the encoder network, with two sets of outputs
+        representing mean and log(variance) of each latent dimension. Includes 
+        a reparameterization in which a latent matrix is obtained by computing
+        the standard deviations from the log(variances), scaling them by some
+        Gaussian noise (epsilon) and shifting them by the learned means, to
+        emulate a sampling operation. 
+        
+        Also, includes the computation of the Kullback–Leibler divergence
+        between a Gaussian prior and the latent posterier.
         
         Args: 
-            x, torch.FloatTensor of the data in the
-            input space
+            x, torch.FloatTensor data in the input space
             
         Returns:
-            z, torch.FloatTensor object of the sampled
-            mean and standard deviations from the two
-            encoding layers
+            if training:
+                z, torch.FloatTensor sampled from posterier distribution
+                parameterized by the learned means and standard deviations 
+                of dimensions in the latent space.
+            else:
+                mu, torch.FloatTensor representing mean (best guess)
         '''
-        x = F.leaky_relu(
+        h = F.leaky_relu(
             self.bn1(self.linear1(x)) 
             if self.batch_norm 
-            else self.linear1(x))
-        mu =  self.linear2(x)
-        sigma = torch.exp(self.linear3(x))
-        z = mu + sigma * self.N.sample(mu.shape)
-        self.kl = (sigma**2 + mu**2 - torch.log(sigma) - 0.5).sum()
-        return z
+            else self.linear1(x)
+        )
+        mu = self.linear2(h)
+        logvar = self.linear3(h)
+        var = torch.exp(logvar)
+        self.kl = 0.5 * torch.sum(var - logvar - 1 + mu**2)
+        
+        if self.training:
+            std = torch.sqrt(var)
+            eps = self.N.sample(std.shape)
+            z = mu + std * eps
+            return z
+        else:
+            return mu
     
     def decode(self, z):
         '''
         Forward pass through the decoder network
         
-        Args: 
-            z, torch.FloatTensor object of encoded data
+        Args:
+            z, torch.FloatTensor of encoded representation
             
         Returns:
-            x_pred, torch.FloatTensor object of decoded data
+            x_pred, torch.FloatTensor of decoded representation
         '''
-        z = F.leaky_relu(
-            self.bn2(self.linear4(z)) 
+        h = F.leaky_relu(
+            self.bn2(self.linear4(z))
             if self.batch_norm 
-            else self.linear4(z))
-        x_pred = torch.sigmoid(self.linear5(z))
+            else self.linear4(z)
+        )
+        x_pred = torch.sigmoid(self.linear5(h))
         return x_pred
     
     fit = fit      
@@ -476,7 +540,7 @@ def main():
         dims = data.X_train.shape[1]
         
         print('Training the autoencoder...')
-        model = AE(dims,2,dims) if model_choice == 'ae' else VAE(dims,2,dims)
+        model = AE(dims, 2, dims) if model_choice == 'ae' else VAE(dims, 2, dims)
         model.fit(data, epochs=int(epochs))
         
         print('Model training complete! Saving model...')
