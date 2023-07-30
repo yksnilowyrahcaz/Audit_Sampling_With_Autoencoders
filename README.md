@@ -93,15 +93,17 @@ as well as a **variational autoencoder**:
 <img src="images/vae1.png" width=600>
 <p/>
 
-There is an important distinction between a variational autoencoder and  a traditional autoencoder. There are generally two output layers of the encoder that represent the means and standard deviations of the underlying distributions of the data. Further, the latent matrix Z is determined by sampling from a Gaussian distribution parameterized by the learned means and standard deviations of the latent space.
+There is an important difference in the architecture of the variational autoencoder when compared to the traditional autoencoder. The output layer of the encoder is typically bifurcated into two sets of nodes: one representing the means, the other representing the variances, of each dimension in the latent space (e.g., two dimensions in Figure 2). Further, the latent matrix Z is determined by sampling from some distribution (e.g., a normal distribution) parameterized by these means and variances.
 
-Now, it is not actually feasible to perform backpropagation with the configuration above because the sampling operation is not differentiable. In practice, we instead sample a random matrix epsilon from a normal distribution and scale the latent standard deviations by epsilon by applying the element-wise product. We then add the result to the latent means to obtain the latent embedding Z.
+Now, it is not actually feasible to compute backpropagation of errors with the configuration in Figure 2 because the sampling operation is not differentiable. In practice, we instead sample a random matrix epsilon from a normal distribution and scale the derived standard deviations by epsilon by applying the element-wise product. We then element-wise add the result to the means to obtain the latent matrix Z. This is an example of a scale-location transformation of some distribution parameterized by the means and variances. The distribution being scale-location transformed is Gaussian of mean 0 and variance 1, but a different distribution could be used.
+
+Finally, because the output layer for the variances spans a range that includes negative values, we interpret these values as the natural logarithm of the variances and exponentiate them to get the variances.
 
 <p align="center">
 <img src="images/vae2.png" width=600>
 <p/>
 
-Structuring the network in this way allows for both stochastic sampling and differentiation with respect to the latent means and standard deviations.
+Structuring the network in this way allows for both stochastic sampling and differentiation with respect to the means and variances of the latent space.
 
 ## About The Dataset <a name="data"></a>
 To demonstrate how autoencoders work, we analyze the [City of Philadelphia payments data](https://www.phila.gov/2019-03-29-philadelphias-initial-release-of-city-payments-data/). It is one of two datasets used in [Schreyer et al (2020)](https://arxiv.org/pdf/2008.02528v1.pdf) and consists of nearly a quarter-million payments from 58 city offices, departments, boards, and commissions. It covers the City's fiscal year 2017 (July 2016  through June 2017) and represents nearly $4.2 billion in payments during that period.
