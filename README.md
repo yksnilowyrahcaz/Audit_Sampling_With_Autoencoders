@@ -90,7 +90,7 @@ In this demonstration, we consider the traditional autoencoder:
 as well as a **variational autoencoder**:
 
 <p align="center">
-<img src="images/vae.png" width=600>
+<img src="images/vae1.png" width=600>
 <p/>
 
 There is an important distinction between a variational autoencoder and  a traditional autoencoder. There are generally two output layers of the encoder that represent the means and standard deviations of the underlying distributions of the data. Further, the latent matrix Z is determined by sampling from a Gaussian distribution parameterized by the learned means and standard deviations of the latent space.
