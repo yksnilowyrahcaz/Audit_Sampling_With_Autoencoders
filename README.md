@@ -122,6 +122,6 @@ To read more about this project, check out this [Medium post](https://medium.com
 This project is largely inspired by a paper published in 2020 by Marco Schreyer, Timur Sattarov, Anita Gierbl, Bernd Reimer, and Damian Borth, entitled [Learning Sampling in Financial Statement Audits using Vector Quantised Autoencoder Neural Networks](https://arxiv.org/pdf/2008.02528.pdf). Additional thanks go to Leena Shekhar for a clear and concise explanation on [Deriving KL Divergence for Gaussians](https://leenashekhar.github.io/2019-01-30-KL-Divergence/), and to Alfredo Canziani, for creating [intuitive videos on autoencoders](https://www.youtube.com/watch?v=bZF4N8HR1cc) (among many other very interesting topics) for the [deep learning course at NYU](https://cds.nyu.edu/deep-learning/).
 
 ## License & copyright <a name="license"></a>
-© Zachary Wolinsky 2022
+© Zachary Wolinsky 2022 - 2023
 
 Licensed under the [MIT License](LICENSE.txt)
